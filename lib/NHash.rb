@@ -5,7 +5,11 @@ require_relative "NHash/version"
 class NHash
   class Error < StandardError; end
 
-  def initialize
+  attr_reader :dimensions
+
+  def initialize(dimensions = 3)
+    @dimensions = dimensions
+    raise Error, 'Wrong number of dimensions' unless dimensions == 3
     @hash = Hash.new { |hash, key| hash[key] = Hash.new { |inhash, inkey| inhash[inkey] = {} } }
   end
 
