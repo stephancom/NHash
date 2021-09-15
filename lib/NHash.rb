@@ -1,36 +1,70 @@
 # frozen_string_literal: true
 
-require_relative "NHash/version"
+# require 'forwardable'
+require_relative 'NHash/version'
 
-class NHash
-  class Error < StandardError; end
+class NHash #< DelegateClass(Hash)
+  # extend Forwardable
+  class DimensionError < StandardError; end
 
+  # def_delegators :@hash
   attr_reader :dimensions
 
   def initialize(dimensions = 3)
-    @dimensions = dimensions
-    raise Error, 'Wrong number of dimensions' unless dimensions == 3
-    @hash = Hash.new { |hash, key| hash[key] = Hash.new { |inhash, inkey| inhash[inkey] = {} } }
+    raise DimensionError unless dimensions.positive?
+
+    @dimensions = dimensions.to_i
+    @hash = if dimensions == 1
+              {}
+            else
+              Hash.new { |hash, key| hash[key] = self.class.new(dimensions - 1) }
+            end
   end
 
-  # it may be useful to extend this to allow for params to be omitted
-  def [](one, two, three)
-    one, two, three = symbolize(one, two, three)
-    @hash[one][two][three]
+  def [](*indices)
+    raise DimensionError.new(indices.inspect) if indices.count > @dimensions
+
+    index = indices.shift
+    if index.nil?
+      if @dimensions < 2
+        self
+      else
+        newhash = self.class.new(@dimensions - 1)
+        # @hash.each_with_object(newhash) { |h, (k, v)| h[k] = @hash[k][*indices]}
+        @hash.each do |k, v|
+          r = v[*indices]
+          newhash[k] = r unless r.nil? || r.empty?
+        end
+        newhash
+      end
+    else
+      index = index.to_sym if index.respond_to?(:to_sym)
+      if indices.empty?
+        @hash[index]
+      else
+        @hash[index][*indices]
+      end
+    end
   end
 
-  def []=(one, two, three, value)
-    one, two, three = symbolize(one, two, three)
-    @hash[one][two][three] = value
+  def []=(*params)
+    value = params.pop
+    raise DimensionError.new(params.inspect) if params.count > @dimensions || params.any?(&:nil?)
+
+    index = params.shift
+    index = index.to_sym if index.respond_to?(:to_sym)
+    if params.count.positive?
+      @hash[index][*params] = value
+    else
+      @hash[index] = value
+    end
   end
 
   def to_h
-    @hash
+    @hash.transform_values { |v| v.respond_to?(:to_h) ? v.to_h : v }
   end
 
-  private
-
-  def symbolize(*inputs)
-    inputs.map { |n| n.respond_to?(:to_sym) ? n.to_sym : n }
+  def empty?
+    @hash.empty?
   end
 end

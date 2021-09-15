@@ -1,13 +1,70 @@
 AllCops:
-  TargetRubyVersion: 2.4
+  Exclude:
+    - db/schema.rb
 
-Style/StringLiterals:
-  Enabled: true
-  EnforcedStyle: double_quotes
+Layout/HashAlignment:
+  EnforcedHashRocketStyle: table
+  EnforcedColonStyle: table
 
-Style/StringLiteralsInInterpolation:
-  Enabled: true
-  EnforcedStyle: double_quotes
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "spec/**/*"
 
-Layout/LineLength:
-  Max: 120
+Metrics/LineLength:
+  Max: 160
+
+Metrics/AbcSize:
+  Max: 30
+
+Metrics/BlockLength:
+  Exclude:
+    - '*.gemspec'
+    - 'Rakefile'
+    - '**/*.rake'
+    - 'test/**/*_test.rb'
+    - 'spec/**/*_spec.rb'
+    - 'spec/**/*_context.rb'
+  ExcludedMethods:
+    - resource
+    - params
+    - requires
+    - route_param
+
+Metrics/MethodLength:
+  Exclude:
+    - 'db/migrate/*.rb'
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/BlockDelimiters:
+  Exclude:
+    - 'spec/factories/**/*.rb'
+  EnforcedStyle: semantic
+  FunctionalMethods:
+    - before
+    - let
+    - let!
+    - subject
+    - watch
+    - expect
+    - uniq
+    - git_source
+    - its
+    - sequence
+    - default_scope
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+
+Style/SingleLineMethods:
+  Exclude:
+    - 'app/policies/application_policy.rb'
+
+Style/Documentation:
+  Exclude:
+    - 'db/migrate/*.rb'
+    - 'app/policies/*_policy.rb'
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
