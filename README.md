@@ -1,8 +1,8 @@
 # NHash
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/NHash`. To experiment with that code, run `bin/console` for an interactive prompt.
+This gem solves the common need for an n-dimensional hash that is pre-initialized.
 
-TODO: Delete this and the text above, and describe your gem
+In addition, it offers a novel means of slicing through N-dimensional hashes.
 
 ## Installation
 
@@ -22,7 +22,74 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Initialize NHash with a number of dimensions, 3 by default.  Values may then be set/retrieved using a list of keys, like so:
+```ruby
+> n = NHash.new(3)
+> n[1, 2, 3] = :foo
+> n[:a, :b, :c] = :bar
+> n.to_h
+{1 => { 2 => { 3 => :foo}}, a: { b: { c: :bar }}}
+```
+
+Keys may be of any type, but are converted to symbols internally when possible for indifferent access
+```ruby
+> n['a', :b, 'd'] = :baz
+> n.to_h
+{1 => { 2 => { 3 => :foo}}, a: { b: { c: :bar, d: :baz }}}
+```
+
+### pre-initialization
+
+It is not uncommon to see this pattern for a hash of hashes:
+```ruby
+newhash = {}
+things.each do |thing|
+    newhash[thing.name] = {}
+    thing.otherthing.each do |otherthing|
+        newhash[thing.name][otherthing.name] = otherthing.result
+    end
+end
+```
+NHash allows:
+```ruby
+newhash = NHash.new(2)
+things.each do |thing|
+    thing.otherthing.each do |otherthing|
+        newhash[thing.name, otherthing.name] = otherthing.result
+    end
+end
+```
+
+### slicing
+
+Let's say we have a list of airport flights and their count of passengers
+
+```ruby
+flight = NHash.new
+flight[:ord, :lax] = 200
+flight[:ord, :jfk] = 150
+flight[:atl, :jfk] = 175
+```
+
+Find all flights from :ord like so:
+```ruby
+> flight[:ord, nil]
+{lax: 200, jfk: 150}
+```
+or to JFK as:
+```ruby
+> flight[nil, :jfk]
+{ord: 150, atl: 175}
+```
+too few parameters assumes the remainder are `nil`
+```ruby
+> flight[:atl]
+{jfk: 175}
+> flight[:lax]
+{}
+```
+
+slicing may only be used for reading, not assignment.  In effect, any given parameter removes that level from the heirarchy
 
 ## Development
 
