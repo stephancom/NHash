@@ -1,13 +1,20 @@
 # frozen_string_literal: true
 
-# require 'forwardable'
 require_relative 'NHash/version'
 
-class NHash #< DelegateClass(Hash)
-  # extend Forwardable
+# 888b      88 88        88                      88
+# 8888b     88 88        88                      88
+# 88 `8b    88 88        88                      88
+# 88  `8b   88 88aaaaaaaa88 ,adPPYYba, ,adPPYba, 88,dPPYba,
+# 88   `8b  88 88""""""""88 ""     `Y8 I8[    "" 88P'    "8a
+# 88    `8b 88 88        88 ,adPPPPP88  `"Y8ba,  88       88
+# 88     `8888 88        88 88,    ,88 aa    ]8I 88       88
+# 88      `888 88        88 `"8bbdP"Y8 `"YbbdP"' 88       88
+#
+# pre-initialized n-dimensional hash with slicing
+class NHash
   class DimensionError < StandardError; end
 
-  # def_delegators :@hash
   attr_reader :dimensions
 
   def initialize(dimensions = 3)
@@ -22,34 +29,23 @@ class NHash #< DelegateClass(Hash)
   end
 
   def [](*indices)
-    raise DimensionError.new(indices.inspect) if indices.count > @dimensions
+    raise DimensionError.new(indices.inspect), 'too many indices' if indices.count > @dimensions
 
     index = indices.shift
-    if index.nil?
-      if @dimensions < 2
-        self
-      else
-        newhash = self.class.new(@dimensions - 1)
-        # @hash.each_with_object(newhash) { |h, (k, v)| h[k] = @hash[k][*indices]}
-        @hash.each do |k, v|
-          r = v[*indices]
-          newhash[k] = r unless r.nil? || r.empty?
-        end
-        newhash
-      end
+    return slice_below(*indices) if index.nil?
+
+    index = index.to_sym if index.respond_to?(:to_sym)
+    if indices.empty?
+      @hash[index]
     else
-      index = index.to_sym if index.respond_to?(:to_sym)
-      if indices.empty?
-        @hash[index]
-      else
-        @hash[index][*indices]
-      end
+      @hash[index][*indices]
     end
   end
 
   def []=(*params)
     value = params.pop
-    raise DimensionError.new(params.inspect) if params.count > @dimensions || params.any?(&:nil?)
+    raise DimensionError.new(params.inspect), 'too many indices' if params.count > @dimensions
+    raise DimensionError.new(params.inspect), 'nil indices forbidden for assignment' if params.any?(&:nil?)
 
     index = params.shift
     index = index.to_sym if index.respond_to?(:to_sym)
@@ -66,5 +62,16 @@ class NHash #< DelegateClass(Hash)
 
   def empty?
     @hash.empty?
+  end
+
+  private
+
+  def slice_below(*indices)
+    return self if @dimensions < 2
+
+    @hash.each_with_object(self.class.new(@dimensions - 1)) do |(k, v), h|
+      r = v[*indices]
+      h[k] = r unless r.nil? || r.empty?
+    end
   end
 end

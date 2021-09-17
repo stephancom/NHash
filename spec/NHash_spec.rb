@@ -89,18 +89,24 @@ RSpec.describe NHash do
     it { expect(nhash[:red, :green, :blue]).to eq 69 }
 
     context 'with wildcards' do
-      it { expect(nhash[nil, :same2, :same3].to_h).to match(same1: :samesame, diff1: :diffsame) }
-      it { expect(nhash[:same1, nil, :same3].to_h).to match(same2: :samesame, diff2: :samediff) }
-      it { expect(nhash[:same1, :same2, nil].to_h).to match(same3: :samesame, diff3: :samesamed) }
-      it { expect(nhash[:same1, :same2].to_h).to match(same3: :samesame, diff3: :samesamed) }
+      context 'with one nil index' do
+        it { expect(nhash[nil, :same2, :same3].to_h).to match(same1: :samesame, diff1: :diffsame) }
+        it { expect(nhash[:same1, nil, :same3].to_h).to match(same2: :samesame, diff2: :samediff) }
+        it { expect(nhash[:same1, :same2, nil].to_h).to match(same3: :samesame, diff3: :samesamed) }
+        it { expect(nhash[:same1, :same2].to_h).to match(same3: :samesame, diff3: :samesamed) }
+      end
 
-      it { expect(nhash[nil, nil, :same3].to_h).to match(same1: { same2: :samesame, diff2: :samediff }, diff1: { same2: :diffsame, diff2: :diffdiff }) }
-      it { expect(nhash[nil, :same2, nil].to_h).to match(same1: { same3: :samesame, diff3: :samesamed }, diff1: { same3: :diffsame, diff3: :diffsamed }) }
-      it { expect(nhash[:same1, nil, nil].to_h).to match(same2: { same3: :samesame, diff3: :samesamed }, diff2: { same3: :samediff, diff3: :samediffd }) }
+      context 'with two nil indices' do
+        it { expect(nhash[nil, nil, :same3].to_h).to match(same1: { same2: :samesame, diff2: :samediff }, diff1: { same2: :diffsame, diff2: :diffdiff }) }
+        it { expect(nhash[nil, :same2, nil].to_h).to match(same1: { same3: :samesame, diff3: :samesamed }, diff1: { same3: :diffsame, diff3: :diffsamed }) }
+        it { expect(nhash[:same1, nil, nil].to_h).to match(same2: { same3: :samesame, diff3: :samesamed }, diff2: { same3: :samediff, diff3: :samediffd }) }
+      end
 
-      it { expect(nhash[:same1, :same2, nil].to_h).to match(nhash[:same1, :same2].to_h) }
-      it { expect(nhash[:same1, nil].to_h).to match(nhash[:same1].to_h) }
-      it { expect(nhash[nil, :same2, nil].to_h).to match(nhash[nil, :same2].to_h) }
+      context 'compare nhash to nhash' do
+        it { expect(nhash[:same1, :same2, nil].to_h).to match(nhash[:same1, :same2].to_h) }
+        it { expect(nhash[:same1, nil].to_h).to match(nhash[:same1].to_h) }
+        it { expect(nhash[nil, :same2, nil].to_h).to match(nhash[nil, :same2].to_h) }
+      end
     end
   end
 
@@ -109,10 +115,10 @@ RSpec.describe NHash do
 
     it { expect(nhash.to_h.is_a?(Hash)).to be true }
     it 'returns a nested hash with the data' do
-      expect(nhash.to_h).to match(a:     { b:     { c: 42, same: 'neljäkymmentäkaksi' } },
-                               red:   { green: { blue: 69 } },
-                               same1: { same2: { same3: :samesame, diff3: :samesamed }, diff2: { same3: :samediff, diff3: :samediffd } },
-                               diff1: { same2: { same3: :diffsame, diff3: :diffsamed }, diff2: { same3: :diffdiff, diff3: :diffdiffd } })
+      expect(nhash.to_h).to match(a:     { b: { c: 42, same: 'neljäkymmentäkaksi' } },
+                                  red:   { green: { blue: 69 } },
+                                  same1: { same2: { same3: :samesame, diff3: :samesamed }, diff2: { same3: :samediff, diff3: :samediffd } },
+                                  diff1: { same2: { same3: :diffsame, diff3: :diffsamed }, diff2: { same3: :diffdiff, diff3: :diffdiffd } })
     end
   end
 end
